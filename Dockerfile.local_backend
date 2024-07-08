@@ -1,0 +1,26 @@
+# Use the official Node.js image based on Alpine
+FROM node:lts-alpine as base
+
+# Update the package list and install bash
+RUN apk update && apk upgrade && apk add --no-cache bash
+
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+# Copy all source files
+COPY . .
+
+# Remove carriage returns from the entrypoint script and ensure it is executable
+RUN sed -i 's/\r$//g' /app/scripts/entrypoint.local.sh && chmod +x /app/scripts/entrypoint.local.sh
+
+# Change ownership of the files to the 'node' user
+RUN chown -R node:node /app
+
+# Switch to non-root user
+USER node
+
+# Expose the necessary port
+EXPOSE 3000

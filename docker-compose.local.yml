@@ -1,9 +1,8 @@
-# Local development docker-compose file
 services:
     # Database service
-    postgres:
-        container_name: postgres
-        image: postgres
+    postgres-db:
+        container_name: postgres-db
+        image: postgres:latest
         restart: always
         env_file:
             - ./backend/.env
@@ -11,7 +10,8 @@ services:
             - "5432:5432"
         volumes:
             - ./backend/postgres:/var/lib/postgresql/data
-    # Redis - Container
+
+    # Redis service
     redis:
         container_name: redis
         image: redis:latest
@@ -20,9 +20,10 @@ services:
             - "6379:6379"
         volumes:
             - redis-data:/data
+
     # Backend API service
-    express_api:
-        container_name: express_api
+    api:
+        container_name: api
         build:
             context: ./backend
             dockerfile: Dockerfile.local
@@ -35,12 +36,13 @@ services:
             - ./backend/.env
         restart: always
         depends_on:
-            - postgres
+            - postgres-db
             - redis
         command: /app/scripts/entrypoint.local.sh
+
     # Frontend service
-    react_frontend:
-        container_name: react_frontend
+    frontend:
+        container_name: frontend
         build:
             context: ./frontend
             dockerfile: Dockerfile
@@ -54,7 +56,7 @@ services:
         command: "yarn dev --host 0.0.0.0"
         restart: always
         depends_on:
-            - express_api
+            - api
 
 volumes:
     redis-data:

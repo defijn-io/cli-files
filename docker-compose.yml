@@ -1,8 +1,7 @@
-# Production docker-compose file
 services:
     # Database service
-    pg-db:
-        container_name: pg-db
+    postgres-db:
+        container_name: postgres-db
         image: postgres:latest
         restart: always
         env_file:
@@ -11,22 +10,17 @@ services:
             - "127.0.0.1:5432:5432"
         volumes:
             - ./backend/pg_db:/var/lib/postgresql/data
-            - ./backend/config/postgres/custom_postgresql.conf:/etc/custom_postgresql.conf
-        command: postgres -c config_file=/etc/custom_postgresql.conf
-    # Redis - Container
+
+    # Redis service
     redis:
         container_name: redis
         image: redis:latest
-        command:
-            [
-                "redis-server",
-                "--requirepass",
-                "Dakq7mqBx4jnmswjWBB47btr6zKmo4ovz8HZyrEGVZBL3",
-            ]
+        command: ["redis-server", "--requirepass", "password"]
         ports:
             - "127.0.0.1:6379:6379"
         volumes:
             - redis-data:/data
+
     # Backend API service
     api:
         container_name: api
@@ -36,12 +30,13 @@ services:
         ports:
             - "127.0.0.1:3000:3000"
         env_file:
-            - ./backend/.env
+            - ./.env
         restart: always
-        command: /app/scripts/entrypoint.sh
+        command: ["/bin/bash", "/app/scripts/entrypoint.sh"]
         depends_on:
-            - pg-db
+            - postgres-db
             - redis
+
     # Frontend service
     frontend:
         container_name: frontend
@@ -55,6 +50,7 @@ services:
             - ./frontend/.env
         depends_on:
             - api
+
     # Caddy server
     caddy:
         container_name: caddy
