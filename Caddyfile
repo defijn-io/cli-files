@@ -1,0 +1,32 @@
+{
+	debug
+}
+
+domain.com {
+	header {
+		# Set X-Frame-Options to DENY on all responses
+		X-Frame-Options "DENY"
+		# Set X-Content-Type-Options to nosniff on all responses
+		X-Content-Type-Options "nosniff"
+	}
+
+	rewrite /admin     /admin/
+
+	handle /api/* {
+		reverse_proxy /api/* api:3000
+	}
+
+	handle /* {
+		root * /srv
+		encode zstd gzip
+		file_server
+		try_files {path} /index.html
+	}
+	log {
+		output file /var/log/caddy/domain.com-access.log {
+			roll_size 10mb
+			roll_keep 20
+			roll_keep_for 720h
+		}
+	}
+}

@@ -1,0 +1,60 @@
+# Local development docker-compose file
+services:
+    # Database service
+    postgres:
+        container_name: postgres
+        image: postgres
+        restart: always
+        env_file:
+            - ./backend/.env
+        ports:
+            - "5432:5432"
+        volumes:
+            - ./backend/postgres:/var/lib/postgresql/data
+    # Redis - Container
+    redis:
+        container_name: redis
+        image: redis:latest
+        command: ["redis-server", "--requirepass", "password"]
+        ports:
+            - "6379:6379"
+        volumes:
+            - redis-data:/data
+    # Backend API service
+    express_api:
+        container_name: express_api
+        build:
+            context: ./backend
+            dockerfile: Dockerfile.local
+        ports:
+            - "3000:3000"
+        volumes:
+            - /app/node_modules
+            - ./backend:/app:z
+        env_file:
+            - ./backend/.env
+        restart: always
+        depends_on:
+            - postgres
+            - redis
+        command: /app/scripts/entrypoint.local.sh
+    # Frontend service
+    react_frontend:
+        container_name: react_frontend
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        ports:
+            - "5173:5173"
+        volumes:
+            - /app/node_modules
+            - ./frontend:/app:z
+        env_file:
+            - ./frontend/.env
+        command: "yarn dev --host 0.0.0.0"
+        restart: always
+        depends_on:
+            - express_api
+
+volumes:
+    redis-data:

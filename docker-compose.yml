@@ -1,0 +1,77 @@
+# Production docker-compose file
+services:
+    # Database service
+    pg-db:
+        container_name: pg-db
+        image: postgres:latest
+        restart: always
+        env_file:
+            - ./backend/.env
+        ports:
+            - "127.0.0.1:5432:5432"
+        volumes:
+            - ./backend/pg_db:/var/lib/postgresql/data
+            - ./backend/config/postgres/custom_postgresql.conf:/etc/custom_postgresql.conf
+        command: postgres -c config_file=/etc/custom_postgresql.conf
+    # Redis - Container
+    redis:
+        container_name: redis
+        image: redis:latest
+        command:
+            [
+                "redis-server",
+                "--requirepass",
+                "Dakq7mqBx4jnmswjWBB47btr6zKmo4ovz8HZyrEGVZBL3",
+            ]
+        ports:
+            - "127.0.0.1:6379:6379"
+        volumes:
+            - redis-data:/data
+    # Backend API service
+    api:
+        container_name: api
+        build:
+            context: ./backend
+            dockerfile: Dockerfile
+        ports:
+            - "127.0.0.1:3000:3000"
+        env_file:
+            - ./backend/.env
+        restart: always
+        command: /app/scripts/entrypoint.sh
+        depends_on:
+            - pg-db
+            - redis
+    # Frontend service
+    frontend:
+        container_name: frontend
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile
+        volumes:
+            - /app/node_modules
+            - build-volume:/app/build:rw
+        env_file:
+            - ./frontend/.env
+        depends_on:
+            - api
+    # Caddy server
+    caddy:
+        container_name: caddy
+        build:
+            context: ./backend
+            dockerfile: Dockerfile.caddy
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - build-volume:/srv:ro
+            - caddy_data:/data
+            - caddy_config:/config
+
+volumes:
+    build-volume:
+    redis-data:
+    caddy_data:
+    caddy_config:
