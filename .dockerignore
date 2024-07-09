@@ -1,0 +1,30 @@
+# Ignore node_modules
+node_modules
+**/node_modules
+
+# Ignore temporary files and directories
+tmp/
+temp/
+*.log
+*.tmp
+
+# Ignore git and other VCS files
+.git
+.gitignore
+
+# Ignore editor and IDE config files
+*.swp
+*.swo
+*.idea
+*.vscode
+
+# Ignore build output
+postgres_db
+
+# Ignore Docker files
+Dockerfile*
+docker-compose*
+.dockerignore
+.git
+.gitignore
+README.md
