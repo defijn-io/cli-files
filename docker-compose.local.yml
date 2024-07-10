@@ -38,7 +38,7 @@ services:
         depends_on:
             - postgres-db
             - redis
-        command: /app/scripts/entrypoint.local.sh
+        command: ["/bin/bash", "/app/scripts/entrypoint.local.sh"]
 
     # Frontend service
     frontend:
